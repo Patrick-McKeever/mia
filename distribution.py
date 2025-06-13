@@ -1,4 +1,5 @@
 import json
+import numpy as np
 from scipy.stats import poisson, nbinom
 from abc import ABC, abstractmethod
 
@@ -33,6 +34,9 @@ class Poisson(CountDistribution):
     def pmf(self, k):
         return poisson.pmf(k, mu=self.lam)
 
+    def pmf_vec(self, k):
+        return poisson.pmf(k, mu=self.lam)
+
     @classmethod
     def from_dict(cls, d):
         return cls(lam=d["lam"])
@@ -59,6 +63,16 @@ class ZeroInflatedPoisson(CountDistribution):
         else:
             return (1 - self.pi) * poisson_part
 
+    def pmf_vec(self, k):
+        k = np.asarray(k)
+        nb_part = nbinom.pmf(k, n=self.r, p=self.p)
+        mask = (k == 0)
+        return np.where(
+            mask,
+            self.pi + (1 - self.pi) * nb_part,
+            (1 - self.pi) * nb_part
+        )
+
     @classmethod
     def from_dict(cls, d):
         return cls(pi=d["pi"], lam=d["lam"])
@@ -79,6 +93,9 @@ class NegativeBinomial(CountDistribution):
         return {"type": "NegativeBinomial", "r": self.r.item(), "p": self.p.item()}
 
     def pmf(self, k):
+        return nbinom.pmf(k, n=self.r, p=self.p)
+
+    def pmf_vec(self, k):
         return nbinom.pmf(k, n=self.r, p=self.p)
 
     @classmethod
@@ -107,6 +124,16 @@ class ZeroInflatedNegativeBinomial(CountDistribution):
             return self.pi + (1 - self.pi) * nb_part
         else:
             return (1 - self.pi) * nb_part
+
+    def pmf_vec(self, k):
+        k = np.asarray(k)
+        nb_part = nbinom.pmf(k, n=self.r, p=self.p)
+        mask = (k == 0)
+        return np.where(
+            mask,
+            self.pi + (1 - self.pi) * nb_part,
+            (1 - self.pi) * nb_part
+        )
 
     def to_dict(self):
         return {"type": "ZeroInflatedNegativeBinomial", "pi": self.pi.item(), "r": self.r.item(), "p": self.p.item()}

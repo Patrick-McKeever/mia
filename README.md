@@ -27,4 +27,7 @@ If you want to run an MIA only on the donor-variable genes identified in the pre
 the output directory for that step as the argument to `--dvg_dir` in this step.
 ```
 python3 mia.py --genes {hvg_csv} --h5ad {real_data} --splits {splits_dir} --dvg_dir {dvg_dir}
-```# mia
+```
+
+(Syntax is the same for `mia2.py`; this file just runs the version Steven proposed, where we sum over
+value of cells' expression values in PMF.)
